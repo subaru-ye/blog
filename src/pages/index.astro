@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostList from '../components/PostList.astro';
+import { getPosts } from '../utils/posts';
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_TAGLINE } from '../consts';
+
+const posts = await getPosts();
+---
+
+<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <!-- 首屏是海报：衬线大字站名 + 一句定位，不是文档 -->
+  <section class="hero">
+    <h1>{SITE_TITLE}</h1>
+    <p class="hero-tagline">{SITE_TAGLINE} · {SITE_DESCRIPTION}</p>
+  </section>
+  <PostList posts={posts} />
+</BaseLayout>

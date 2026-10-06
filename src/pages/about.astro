@@ -1,0 +1,110 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { GITHUB_URL } from '../consts';
+---
+
+<BaseLayout title="关于" description="关于白桦：Java 后端开发，华东交通大学软件工程本科在读。">
+  <h1 class="page-title">关于我</h1>
+  <div class="prose">
+    <p>
+      我是白桦，目前在 上海财轻松数字科技有限公司 担任 AI 全栈工程师（2026.03
+      至今），负责 AI 财税工作台与电子税务局自动化系统的开发；华东交通大学软件工程本科在读。这个博客记录我的技术笔记、项目复盘与踩坑过程——把做过的事想清楚，再写明白。
+    </p>
+
+    <h2>技术方向</h2>
+    <ul>
+      <li>
+        <strong>Agent 架构与可靠性</strong>：理解模型推理与业务执行的职责边界，能按任务复杂度组织工作流与多
+        Agent 协作；围绕上下文管理、工具接口和状态传递设计执行链路，并通过轨迹评测等改进系统表现
+      </li>
+      <li>
+        <strong>后端开发</strong>：熟悉 Spring Boot，具备 Fastify 及 Go
+        服务开发经验，有单元测试与问题排查经验
+      </li>
+      <li>
+        <strong>数据库与缓存</strong>：熟悉 MySQL、PostgreSQL（pgvector），掌握 Elasticsearch
+        全文检索与分布式搜索；具备 SQL
+        优化能力，深入使用 Redis 做高并发优化（缓存三大问题防护、Bitmap）
+      </li>
+      <li>
+        <strong>中间件与实时通信</strong>：熟悉 RabbitMQ 异步消息处理、WebSocket 双向通信和 Nacos
+        服务发现
+      </li>
+    </ul>
+
+    <h2>项目与经历</h2>
+    <h3>工作经历</h3>
+    <p>
+      上海财轻松数字科技有限公司 · AI 全栈工程师（2026.03 至今）——负责 AI
+      财税工作台与电子税务局自动化系统开发，打通自然语言任务发起、客户授权、设备执行与结果追踪流程：
+    </p>
+    <ul>
+      <li>
+        <strong>意图识别与任务编排</strong>：接入 Pi
+        对话运行时，构建"澄清—工具选择—可编辑草案"链路；面向 41 项业务工具按 Skill
+        收敛候选范围，并通过隔离评测修复缺参误执行、非法日期被擅自改写等问题
+      </li>
+      <li>
+        <strong>安全执行与异常恢复</strong
+        >：建立用户权限、客户范围、精确 Skill、设备租约及一次性许可的分层门禁；以幂等键和持久化执行记录恢复中断任务，结果未知时只核验原执行，避免重复提交
+      </li>
+      <li>
+        <strong>MCP 工具接入</strong
+        >：构建面向外部 AI 助手的 MCP
+        服务，以 OAuth 身份及客户、工具权限的实时交集控制访问；开放税务查询与记账能力，为税务长任务提供增量进度和结构化分页结果
+      </li>
+      <li>
+        <strong>税局 RPA 与人机协作</strong
+        >：实现办税登录态复用、定时保活和多 Chrome 分片调度；接入飞书二维码通知衔接人工处理，单笔开票人工环节平均耗时减少约 60%
+      </li>
+    </ul>
+
+    <h3>个人项目</h3>
+    <ul>
+      <li>
+        <a href="https://github.com/subaru-ye/pc-builder-agent" rel="noopener">白桦智能装机</a
+        >（2026.07 至今）——基于 Go、Google ADK、PostgreSQL 和 Next.js
+        构建的双 Agent 装机系统：初筛 Agent 归并可追溯需求，用户核定后由选配 Agent
+        检索零件、生成方案，服务端校验需求完整性、兼容性与报价。核心工程点：
+        <ul>
+          <li>
+            <strong>双 Agent 与确定性编排</strong
+            >：服务端判断确认条件并控制 Builder 准入；用户核定时原子冻结需求快照与执行输入，以修订号和哈希阻断过期确认与载荷漂移
+          </li>
+          <li>
+            <strong>上下文工程与分层偏好记忆</strong
+            >：多轮对话增量归并为可溯源的结构化需求状态，初筛仅使用状态视图、最近回复与本轮原话，避免全量历史重放；原话溯源、对象隔离与冲突更新，召回经用户确认后写入
+          </li>
+          <li>
+            <strong>分层评估与可视化工作台</strong
+            >：冻结金标、Pass³ 及工作台支持失败轮次追踪与提示词版本溯源；初筛候选通过全部 16
+            项冻结门槛，完成四模型质量、延迟与成本对照
+          </li>
+          <li>
+            <strong>工具与交付可靠性</strong
+            >：审计 2,257 次工具调用，定位 91 次错误（4.0%），封堵参数静默改写并完善定位式报错；A/B 共
+            395 次模型请求未出现错误交付或账实违例
+          </li>
+        </ul>
+      </li>
+      <li>
+        <a href="https://github.com/subaru-ye/ye-ai-web-factory" rel="noopener">白桦网站秒搭</a
+        >——基于 Spring Boot + LangChain4j 的 AI 网站生成平台：自然语言实时生成可运行网站，SSE 流式输出、一键部署与代码下载
+      </li>
+      <li>
+        <a href="https://github.com/subaru-ye/ye-picture" rel="noopener">白桦图享工坊</a
+        >——基于 Spring Boot + Vue 的云端图库协作系统：COS 对象存储、Caffeine + Redis
+        多级缓存、WebSocket 多端协同、RabbitMQ 异步消息
+      </li>
+    </ul>
+    <p>
+      完整的项目介绍与技能栈见我的作品集：<a href="https://baihua.vercel.app/" rel="noopener">baihua.vercel.app</a>。
+    </p>
+
+    <h2>联系我</h2>
+    <ul>
+      <li>GitHub：<a href={GITHUB_URL} rel="noopener">github.com/subaru-ye</a></li>
+      <li>邮箱：<a href="mailto:838184610@qq.com">838184610@qq.com</a></li>
+    </ul>
+  </div>
+</BaseLayout>

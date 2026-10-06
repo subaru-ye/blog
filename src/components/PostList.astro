@@ -1,0 +1,37 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { fmtDate } from '../utils/posts';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+---
+
+<!-- 编辑部式列表：分隔线 + 日期 + 标题 + 摘要，无卡片；hover 唯一反馈是标题变色 -->
+<ul class="post-list">
+  {
+    posts.map((post) => (
+      <li class="post-item">
+        <p class="post-item-date">
+          <time datetime={post.data.pubDate.toISOString()}>{fmtDate(post.data.pubDate)}</time>
+          {post.data.draft && <span class="draft-mark"> · 草稿</span>}
+        </p>
+        <h2 class="post-item-title">
+          <a href={`/blog/${post.id}/`}>{post.data.title}</a>
+        </h2>
+        <p class="post-item-meta">
+          {post.data.category}
+          {post.data.tags.map((t) => (
+            <>
+              {' · '}
+              <a href={`/tags/${t}/`}>{t}</a>
+            </>
+          ))}
+        </p>
+        <p class="post-item-desc">{post.data.description}</p>
+      </li>
+    ))
+  }
+</ul>

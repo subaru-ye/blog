@@ -1,0 +1,20 @@
+---
+interface Props {
+  items: { depth: number; slug: string; text: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav class="toc" aria-label="目录">
+  <p class="toc-title">目录</p>
+  <ul>
+    {
+      items.map((h) => (
+        <li class={h.depth === 2 ? 'toc-h2' : 'toc-h3'}>
+          <a href={`#${h.slug}`}>{h.text}</a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

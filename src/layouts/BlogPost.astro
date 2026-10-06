@@ -1,0 +1,164 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import Toc from '../components/Toc.astro';
+import { fmtDateLong, readingTime } from '../utils/posts';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  headings: { depth: number; slug: string; text: string }[];
+  /** 发布时间更晚的一篇（可选，文章导航用） */
+  prev?: CollectionEntry<'blog'>;
+  /** 发布时间更早的一篇（可选） */
+  next?: CollectionEntry<'blog'>;
+}
+
+const { post, headings, prev, next } = Astro.props;
+const { title, description, pubDate, updatedDate, category, tags, draft } = post.data;
+const minutes = readingTime(post.body ?? '');
+const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<BaseLayout title={title} description={description} article wide>
+  <div class="post-layout">
+    <!-- 左侧页边注栏：宽屏显示（元信息 + 阅读进度），窄屏回退到文章头部元信息 -->
+    <aside class="post-rail" aria-label="文章信息">
+      <div class="rail-progress" aria-hidden="true"><div class="rail-progress-fill"></div></div>
+      <p class="rail-date">
+        <time datetime={pubDate.toISOString()}>{fmtDateLong(pubDate)}</time>
+        {
+          updatedDate && (
+            <span>
+              （更新于
+              <time datetime={updatedDate.toISOString()}>{fmtDateLong(updatedDate)}</time>）
+            </span>
+          )
+        }
+      </p>
+      <p class="rail-meta">
+        {category} · 约 {minutes} 分钟
+        {draft && <span class="draft-mark"> · 草稿</span>}
+      </p>
+      {
+        tags.length > 0 && (
+          <p class="rail-tags">
+            {tags.map((t) => (
+              <a href={`/tags/${t}/`}>{t}</a>
+            ))}
+          </p>
+        )
+      }
+    </aside>
+    <article class="post prose">
+      <header class="post-header">
+        <h1 class="post-title">{title}</h1>
+        <p class="post-meta">
+          <time datetime={pubDate.toISOString()}>{fmtDateLong(pubDate)}</time>
+          {
+            updatedDate && (
+              <span>
+                （更新于
+                <time datetime={updatedDate.toISOString()}>{fmtDateLong(updatedDate)}</time>）
+              </span>
+            )
+          }
+          {' · '}{category}{' · '}约 {minutes} 分钟
+          {draft && <span class="draft-mark"> · 草稿（未发布）</span>}
+        </p>
+        {
+          tags.length > 0 && (
+            <p class="post-tags">
+              {tags.map((t) => (
+                <a href={`/tags/${t}/`}>{t}</a>
+              ))}
+            </p>
+          )
+        }
+      </header>
+
+      {
+        tocItems.length > 0 && (
+          <details class="toc-mobile">
+            <summary>目录</summary>
+            <Toc items={tocItems} />
+          </details>
+        )
+      }
+
+      <slot />
+
+      <nav class="post-nav" aria-label="上下篇导航">
+        {
+          prev ? (
+            <a href={`/blog/${prev.id}/`}>
+              <span class="nav-dir">← 上一篇（更新）</span>
+              <span>{prev.data.title}</span>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+        {
+          next ? (
+            <a class="nav-next" href={`/blog/${next.id}/`}>
+              <span class="nav-dir">下一篇（更早）→</span>
+              <span>{next.data.title}</span>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+      </nav>
+    </article>
+
+    {tocItems.length > 0 && <aside class="toc-desktop"><Toc items={tocItems} /></aside>}
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  // TOC 当前节高亮：滚动时找最后一个越过视口锚点的标题（桌面侧栏与移动折叠共用）
+  (function () {
+    var links = document.querySelectorAll('.toc a[href^="#"]');
+    if (!links.length) return;
+    var heads = Array.prototype.slice
+      .call(document.querySelectorAll('.prose h2[id], .prose h3[id]'))
+      .filter(function (h) {
+        return document.querySelector('.toc a[href="#' + h.id + '"]');
+      });
+    if (!heads.length) return;
+    var current = null;
+    function setActive(id) {
+      if (current === id) return;
+      current = id;
+      for (var i = 0; i < links.length; i++) {
+        links[i].classList.toggle(
+          'active',
+          links[i].getAttribute('href') === '#' + id
+        );
+      }
+    }
+    var ticking = false;
+    var fill = document.querySelector('.rail-progress-fill');
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        var y = window.scrollY + 100;
+        var active = heads[0];
+        for (var i = 0; i < heads.length; i++) {
+          if (heads[i].offsetTop <= y) active = heads[i];
+        }
+        setActive(active.id);
+        // 左栏阅读进度线
+        if (fill) {
+          var max = document.documentElement.scrollHeight - window.innerHeight;
+          fill.style.transform =
+            'scaleY(' + (max > 0 ? Math.min(1, window.scrollY / max) : 0) + ')';
+        }
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>

@@ -1,0 +1,904 @@
+/* ================================================================
+   设计 Token — 唯一事实来源。规则与用法见 UI_RULES.md，方向见 DESIGN_CONTEXT.md
+   ================================================================ */
+:root {
+  --font-serif: Georgia, 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC',
+    'SimSun', serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas,
+    'SF Mono', monospace;
+
+  /* 亮色：暖中性纸感 */
+  --bg: #faf9f7;
+  --surface: #ffffff;
+  --fg: #1c1e21;
+  --muted: #525a66;
+  --accent: #3b5bdb;
+  --border: #e6e2db;
+  --code-bg: #f4f2eb;
+  --danger: #b4372f;
+  --danger-bg: #fbedeb;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --measure: 42rem;
+}
+
+html[data-theme='dark'] {
+  /* 暗色：成对设计，降饱和浅色文字，非简单反色 */
+  --bg: #191b1f;
+  --surface: #202329;
+  --fg: #c9cdd4;
+  --muted: #98a0ab;
+  --accent: #8ca6f2;
+  --border: #343841;
+  --code-bg: #20232a;
+  --danger: #e3908a;
+  --danger-bg: #382527;
+}
+
+/* 无 JS 时跟随系统 */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) {
+    --bg: #191b1f;
+    --surface: #202329;
+    --fg: #c9cdd4;
+    --muted: #98a0ab;
+    --accent: #8ca6f2;
+    --border: #343841;
+    --code-bg: #20232a;
+    --danger: #e3908a;
+    --danger-bg: #382527;
+  }
+}
+
+/* ================================================================
+   基础
+   ================================================================ */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem; /* 17px */
+  line-height: 1.8;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 短页面时把页脚压到视口底部 */
+main {
+  flex: 1;
+}
+
+img {
+  max-width: 100%;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--code-bg);
+}
+
+.container {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+/* 文章页加宽，为侧边目录留位；正文列宽仍受 --measure 控制 */
+.container-wide {
+  max-width: 62rem;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  z-index: 10;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.5rem 1rem;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+/* ================================================================
+   页头 / 导航
+   ================================================================ */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+/* 下滑自动隐藏，上滑立即回来（由 BaseLayout 内联脚本切换） */
+.site-header.header-hidden {
+  transform: translateY(-100%);
+}
+
+.header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  row-gap: 0;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* 触控区域 */
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--fg);
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.brand:hover {
+  text-decoration: none;
+  color: var(--accent);
+}
+
+.site-header nav {
+  display: flex;
+  gap: 1.25rem;
+  margin-left: auto;
+}
+
+/* 4 个双字导航项在 375px 单行放得下，不引入汉堡菜单（见 UI_RULES.md） */
+.site-header nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* 触控区域 */
+  color: var(--muted);
+  font-size: 0.9375rem;
+  white-space: nowrap;
+}
+
+.site-header nav a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.site-header nav a[aria-current='page'] {
+  color: var(--fg);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+}
+
+#theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+#theme-toggle:hover {
+  color: var(--accent);
+  border-color: var(--muted);
+}
+
+.icon-sun {
+  display: none;
+}
+
+html[data-theme='dark'] .icon-sun {
+  display: block;
+}
+
+html[data-theme='dark'] .icon-moon {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) .icon-sun {
+    display: block;
+  }
+  html:not([data-theme='light']) .icon-moon {
+    display: none;
+  }
+}
+
+/* ================================================================
+   页脚
+   ================================================================ */
+.site-footer {
+  margin-top: 4.5rem;
+  border-top: 1px solid var(--border);
+  padding: 2rem 0 3rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.site-footer p {
+  margin: 0.25rem 0;
+}
+
+.site-footer a {
+  color: var(--muted);
+}
+
+.site-footer a:hover {
+  color: var(--accent);
+}
+
+/* ================================================================
+   通用页头（归档 / 标签 / 关于）
+   ================================================================ */
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 1.75rem;
+  line-height: 1.35;
+  margin: 3rem 0 0.5rem;
+}
+
+.page-sub {
+  color: var(--muted);
+  font-size: 0.9375rem;
+  margin: 0 0 1rem;
+}
+
+/* ================================================================
+   首页：海报式首屏 + 编辑部式列表
+   ================================================================ */
+.hero {
+  padding: 3.25rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 6vw, 2.625rem);
+  line-height: 1.25;
+  margin: 0 0 0.9rem;
+}
+
+.hero-tagline {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.0625rem;
+}
+
+.post-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.post-item {
+  padding: 1.9rem 0;
+}
+
+.post-item + .post-item {
+  border-top: 1px solid var(--border);
+}
+
+.post-item-date {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.post-item-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  line-height: 1.45;
+  margin: 0 0 0.35rem;
+}
+
+.post-item-title a {
+  color: var(--fg);
+}
+
+/* 列表项唯一 hover 反馈：标题变强调色 */
+.post-item-title a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.post-item-meta {
+  margin: 0 0 0.55rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.post-item-meta a {
+  color: var(--muted);
+}
+
+.post-item-meta a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.post-item-desc {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+/* ================================================================
+   标签云（全站唯一允许的轻描边容器）
+   ================================================================ */
+.tag-cloud {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 2rem 0;
+  padding: 0;
+}
+
+.tag-cloud a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-height: 44px;
+  align-items: center;
+  padding: 0 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg);
+  font-size: 0.9375rem;
+}
+
+.tag-cloud a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.tag-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* ================================================================
+   归档：按年分组的时间线
+   ================================================================ */
+.archive-year {
+  margin: 3rem 0 0;
+}
+
+.archive-year h2 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  line-height: 1.4;
+  margin: 0 0 0.5rem;
+}
+
+.archive-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.archive-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.6rem 0;
+}
+
+.archive-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.archive-list time {
+  flex: none;
+  width: 3.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.archive-list .archive-cat {
+  flex: none;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.archive-list a {
+  color: var(--fg);
+}
+
+.archive-list a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* ================================================================
+   文章页
+   ================================================================ */
+.post-layout {
+  padding-bottom: 1rem;
+}
+
+.post-header {
+  padding: 3rem 0 0;
+}
+
+.post-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.75rem, 4.5vw, 2.25rem);
+  line-height: 1.35;
+  margin: 0 0 0.9rem;
+}
+
+.post-meta {
+  margin: 0 0 0.6rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.post-meta .draft-mark,
+.post-item-date .draft-mark {
+  color: var(--danger);
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0 0 2rem;
+  font-size: 0.875rem;
+}
+
+.post-tags a {
+  color: var(--muted);
+}
+
+.post-tags a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* 目录：移动端折叠（<details> 零 JS），≥75rem 侧边悬浮 */
+.toc-mobile {
+  margin: 0 0 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.25rem 1.1rem;
+  background: var(--surface);
+}
+
+.toc-mobile summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.toc-desktop {
+  display: none;
+}
+
+.toc-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.5rem;
+}
+
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li a {
+  display: block;
+  padding: 0.3rem 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.toc li.toc-h3 {
+  padding-left: 1rem;
+}
+
+.toc li a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* TOC 当前节高亮（由 BlogPost 内联脚本切换） */
+.toc li a.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 上一篇 / 下一篇 */
+.post-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.post-nav a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: 48%;
+  color: var(--fg);
+  padding: 0.5rem 0;
+}
+
+.post-nav a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.nav-dir {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.nav-next {
+  text-align: right;
+  margin-left: auto;
+}
+
+/* ================================================================
+   正文排版（层级靠字号字重间距，不靠颜色）
+   ================================================================ */
+.prose {
+  max-width: var(--measure);
+}
+
+.prose h2 {
+  font-family: var(--font-serif);
+  font-size: 1.375rem;
+  line-height: 1.5;
+  margin: 2.5em 0 0.8em;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 5rem;
+}
+
+.prose h3 {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  line-height: 1.5;
+  margin: 1.9em 0 0.6em;
+  scroll-margin-top: 5rem;
+}
+
+.prose p {
+  margin: 1em 0;
+}
+
+.prose ul,
+.prose ol {
+  margin: 1em 0;
+  padding-left: 1.6em;
+}
+
+.prose li {
+  margin: 0.3em 0;
+}
+
+.prose li::marker {
+  color: var(--muted);
+}
+
+/* 引用块：安静但清晰——细左线 + 弱化文字，无底色无强调色 */
+.prose blockquote {
+  margin: 1.5em 0;
+  padding: 0.1em 0 0.1em 1.2em;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+
+.prose blockquote p {
+  margin: 0.6em 0;
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--code-bg);
+  padding: 0.12em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
+.prose pre {
+  margin: 1.5em 0;
+  padding: 2.3rem 1.1rem 1rem;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+.prose pre code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.prose table {
+  display: block;
+  margin: 1.5em 0;
+  border-collapse: collapse;
+  overflow-x: auto;
+  font-size: 0.9375rem;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: 0.45em 0.85em;
+}
+
+.prose th {
+  background: var(--code-bg);
+  font-weight: 600;
+}
+
+.prose img {
+  border-radius: var(--radius-md);
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.5em 0;
+}
+
+/* 正文链接：默认下划线弱化，hover 过渡到强调色 */
+.prose a {
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 3px;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--accent);
+}
+
+/* About 页占位 */
+.todo {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ================================================================
+   代码块：语言标签 + 暗色主题切换
+   ================================================================ */
+.astro-code {
+  position: relative;
+}
+
+.astro-code::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.6rem;
+  right: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Shiki 双主题：暗色值在行内 --shiki-dark 变量上，需 !important 覆盖内联样式 */
+html[data-theme='dark'] .astro-code {
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+html[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) .astro-code {
+    background-color: var(--shiki-dark-bg) !important;
+  }
+  html:not([data-theme='light']) .astro-code span {
+    color: var(--shiki-dark) !important;
+  }
+}
+
+/* 左侧页边注栏：默认隐藏，≥82rem 显示（见桌面端布局块） */
+.post-rail {
+  display: none;
+}
+
+/* ================================================================
+   桌面端：文章布局——正文视口居中，目录贴页面右缘
+   ================================================================ */
+@media (min-width: 82rem) {
+  .container-wide {
+    max-width: none;
+    /* .container 的 margin:0 auto 在无 max-width 时会阻止 flex 拉伸，这里必须归零 */
+    margin: 0;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .post-layout {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, var(--measure)) 1fr;
+    column-gap: 5rem;
+    align-items: start;
+  }
+
+  .post-layout > article {
+    grid-column: 2;
+  }
+
+  /* 左侧页边注：元信息挪到这里，文章头部不再重复显示 */
+  .post-header .post-meta,
+  .post-header .post-tags {
+    display: none;
+  }
+
+  .post-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.1rem;
+    grid-column: 1;
+    justify-self: end;
+    width: 11rem;
+    position: sticky;
+    top: 5.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--muted);
+    text-align: left;
+  }
+
+  .post-rail p {
+    margin: 0;
+  }
+
+  .post-rail a {
+    color: var(--muted);
+  }
+
+  .post-rail a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .rail-progress {
+    width: 2px;
+    height: 96px;
+    margin-bottom: 0.75rem;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .rail-progress-fill {
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+
+  .toc-mobile {
+    display: none;
+  }
+
+  .toc-desktop {
+    display: block;
+    grid-column: 3;
+    justify-self: end;
+    width: 14rem;
+    position: sticky;
+    top: 5.5rem;
+    max-height: calc(100vh - 7.5rem);
+    overflow-y: auto;
+    border-left: 1px solid var(--border);
+    padding-left: 1.25rem;
+  }
+}
+
+/* ================================================================
+   动效预算（全站 3 个）：页面进入 / 链接过渡 / 主题切换过渡
+   全部只在用户未偏好减少动效时启用
+   ================================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  main {
+    animation: page-enter 0.22s ease-out both;
+  }
+
+  a {
+    transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  }
+
+  #theme-toggle {
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  body,
+  .site-header,
+  .site-footer,
+  .toc-mobile,
+  .astro-code,
+  .prose blockquote,
+  .prose th,
+  .prose code {
+    transition: background-color 0.25s ease, color 0.25s ease,
+      border-color 0.25s ease, transform 0.2s ease;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* 平滑滚动同样尊重减少动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

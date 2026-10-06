@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPosts } from '../utils/posts';
+
+const posts = await getPosts();
+const byYear = new Map<number, typeof posts>();
+for (const post of posts) {
+  const year = post.data.pubDate.getFullYear();
+  const list = byYear.get(year);
+  if (list) list.push(post);
+  else byYear.set(year, [post]);
+}
+const years = [...byYear.entries()].sort((a, b) => b[0] - a[0]);
+---
+
+<BaseLayout title="时间线" description="全部文章按年份排列的时间线。">
+  <h1 class="page-title">时间线</h1>
+  <p class="page-sub">共 {posts.length} 篇</p>
+  {
+    years.map(([year, list]) => (
+      <section class="archive-year">
+        <h2>{year}</h2>
+        <ul class="archive-list">
+          {list.map((post) => (
+            <li>
+              <time datetime={post.data.pubDate.toISOString()}>
+                {post.data.pubDate.toLocaleDateString('zh-CN', {
+                  month: '2-digit',
+                  day: '2-digit',
+                })}
+              </time>
+              <a href={`/blog/${post.id}/`}>{post.data.title}</a>
+              <span class="archive-cat">{post.data.category}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</BaseLayout>
